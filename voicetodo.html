@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice To-Do List</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+        }
+
+        .lists-container {
+            flex: 1;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .list-title {
+            font-size: 1.5rem;
+            color: var(--dark-color);
+        }
+
+        .todo-input-container {
+            flex: 1;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            resize: vertical;
+            font-size: 16px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background-color: #3a5b8c;
+        }
+
+        .voice-btn {
+            background-color: var(--accent-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+        }
+
+        .voice-btn:hover {
+            background-color: #138496;
+        }
+
+        .voice-btn.recording {
+            background-color: var(--danger-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        .fix-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        .fix-btn:hover {
+            background-color: #0d4961;
+        }
+
+        .todo-list {
+            list-style-type: none;
+            margin-top: 20px;
+        }
+
+        .todo-item {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .todo-text {
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .todo-actions button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .complete-btn {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .complete-btn:hover {
+            background-color: #218838;
+        }
+
+        .delete-btn {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.visible {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.visible .modal-content {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: var(--danger-color);
+            margin-top: 10px;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Voice To-Do List</h1>
+            <p>Use your voice to create tasks with automatic grammar correction</p>
+        </header>
+
+        <div class="main-content">
+            <div class="lists-container">
+                <div class="list-header">
+                    <h2 class="list-title">Tasks</h2>
+                    <div class="button-group">
+                        <button id="clearCompletedBtn" class="primary-btn">Clear Completed</button>
+                    </div>
+                </div>
+                <ul id="todoList" class="todo-list">
+                    <!-- Todo items will be added here -->
+                </ul>
+            </div>
+
+            <div class="todo-input-container">
+                <h2>Add New Task</h2>
+                <p>Speak or type your task below</p>
+                <textarea id="taskInput" placeholder="Type your task or click the microphone button to use voice input..."></textarea>
+                <div class="button-group">
+                    <button id="voiceInputBtn" class="voice-btn">🎤</button>
+                    <button id="fixGrammarBtn" class="fix-btn">G</button>
+                    <button id="addTaskBtn" class="primary-btn">Add Task</button>
+                </div>
+                <div id="errorMsg" class="error-msg">An error occurred. Please try again.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const taskInput = document.getElementById('taskInput');
+        const voiceInputBtn = document.getElementById('voiceInputBtn');
+        const fixGrammarBtn = document.getElementById('fixGrammarBtn');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const todoList = document.getElementById('todoList');
+        const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Data Structure
+        let todos = [];
+
+        // Utility Functions
+        function generateId() {
+            return Date.now() + Math.floor(Math.random() * 1000);
+        }
+
+        // Voice Recognition Setup
+        let isRecording = false;
+        let recognition = null;
+
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+        } else if ('SpeechRecognition' in window) {
+            recognition = new SpeechRecognition();
+        }
+
+        if (recognition) {
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isRecording = true;
+                voiceInputBtn.classList.add('recording');
+                taskInput.placeholder = "Listening...";
+            };
+
+            recognition.onresult = async (event) => {
+                let finalTranscript = '';
+
+                for (let result of event.results) {
+                    if (result.isFinal) {
+                        finalTranscript += result[0].transcript + ' ';
+                    }
+                }
+
+                if (finalTranscript.trim()) {
+                    try {
+                        taskInput.value = finalTranscript.trim();
+                        fixGrammar();
+                    } catch (error) {
+                        console.error('Error with voice recognition:', error);
+                        taskInput.value = finalTranscript.trim();
+                    }
+                }
+            };
+
+            recognition.onend = () => {
+                isRecording = false;
+                voiceInputBtn.classList.remove('recording');
+                taskInput.placeholder = "Type your task or click the microphone button to use voice input...";
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                
+                let errorMessage = 'Speech recognition error. ';
+                switch (event.error) {
+                    case 'network':
+                        errorMessage = 'Network error occurred. Check your internet connection.';
+                        break;
+                    case 'not-allowed':
+                    case 'permission-denied':
+                        errorMessage = 'Microphone permission is required. Please allow microphone access.';
+                        break;
+                    case 'no-speech':
+                        errorMessage = 'No speech was detected. Please try again.';
+                        break;
+                    case 'audio-capture':
+                        errorMessage = 'No microphone was found. Please check your microphone connection.';
+                        break;
+                    default:
+                        errorMessage = 'Please try again.';
+                }
+                
+                showError(errorMessage);
+                isRecording = false;
+                voiceInputBtn.classList.remove('recording');
+                
+                try {
+                    recognition.abort();
+                    setTimeout(() => {
+                        if (isRecording) {
+                            recognition.start();
+                        }
+                    }, 1000);
+                } catch (e) {
+                    console.error('Error restarting recognition:', e);
+                }
+            };
+        } else {
+            voiceInputBtn.style.display = 'none';
+            showError('Speech recognition is not supported in this browser.');
+        }
+
+        // Grammar Correction Function
+        async function fixGrammar() {
+            const text = taskInput.value.trim();
+            if (!text) return;
+
+            fixGrammarBtn.textContent = '...';
+            fixGrammarBtn.disabled = true;
+
+            try {
+                // Simple client-side grammar fixes
+                let correctedText = text;
+                
+                // Ensure first letter is capitalized
+                correctedText = correctedText.charAt(0).toUpperCase() + correctedText.slice(1);
+                
+                // Fix common grammar issues
+                correctedText = correctedText
+                    .replace(/\s+/g, ' ')                  // Remove multiple spaces
+                    .replace(/\s*([.,!?;:])/g, '$1 ')      // Add space after punctuation
+                    .replace(/\s+([.,!?;:])/g, '$1 ')      // Fix extra spaces before punctuation
+                    .replace(/\s+$/g, '')                  // Remove trailing spaces
+                    .replace(/\bi\b/g, 'I');               // Capitalize 'i' when it's alone
+                
+                // Ensure there's a period at the end if there's no punctuation
+                if (!/[.!?]$/.test(correctedText)) {
+                    correctedText += '.';
+                }
+                
+                taskInput.value = correctedText;
+            } catch (error) {
+                console.error('Error fixing grammar:', error);
+                showError('Failed to fix grammar. Please try again.');
+            } finally {
+                fixGrammarBtn.textContent = 'G';
+                fixGrammarBtn.disabled = false;
+            }
+        }
+
+        // Todo Management Functions
+        function addTodo(text) {
+            const todo = {
+                id: generateId(),
+                text: text,
+                completed: false
+            };
+            todos.push(todo);
+            renderTodos();
+            saveToLocalStorage();
+            return todo;
+        }
+
+        function toggleTodoComplete(id) {
+            const todo = todos.find(t => t.id === parseInt(id));
+            if (todo) {
+                todo.completed = !todo.completed;
+                renderTodos();
+                saveToLocalStorage();
+            }
+        }
+
+        function deleteTodo(id) {
+            todos = todos.filter(t => t.id !== parseInt(id));
+            renderTodos();
+            saveToLocalStorage();
+        }
+
+        function clearCompleted() {
+            todos = todos.filter(t => !t.completed);
+            renderTodos();
+            saveToLocalStorage();
+        }
+
+        function renderTodos() {
+            todoList.innerHTML = '';
+            if (todos.length === 0) {
+                todoList.innerHTML = '<p>No tasks yet. Add one above!</p>';
+                return;
+            }
+
+            todos.forEach(todo => {
+                const todoElement = document.createElement('li');
+                todoElement.className = 'todo-item';
+                todoElement.dataset.id = todo.id;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'todo-text';
+                textSpan.textContent = todo.text;
+                if (todo.completed) {
+                    textSpan.classList.add('completed');
+                }
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'todo-actions';
+                
+                const completeBtn = document.createElement('button');
+                completeBtn.className = 'complete-btn';
+                completeBtn.innerHTML = todo.completed ? '↩️' : '✓';
+                completeBtn.title = todo.completed ? 'Mark as incomplete' : 'Mark as complete';
+                completeBtn.addEventListener('click', () => toggleTodoComplete(todo.id));
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.title = 'Delete task';
+                deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+                
+                actionsDiv.appendChild(completeBtn);
+                actionsDiv.appendChild(deleteBtn);
+                
+                todoElement.appendChild(textSpan);
+                todoElement.appendChild(actionsDiv);
+                
+                todoList.appendChild(todoElement);
+            });
+        }
+
+        // Error Handling
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 5000);
+        }
+
+        // Local Storage Functions
+        function saveToLocalStorage() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function loadFromLocalStorage() {
+            const savedTodos = localStorage.getItem('todos');
+            if (savedTodos) {
+                todos = JSON.parse(savedTodos);
+            }
+        }
+
+        // Event Listeners
+        voiceInputBtn.addEventListener('click', () => {
+            if (!isRecording && recognition) {
+                try {
+                    recognition.start();
+                    console.log('Started recording');
+                } catch (error) {
+                    console.error('Error starting recognition:', error);
+                    showError('Error starting voice recognition. Please try again.');
+                    isRecording = false;
+                    voiceInputBtn.classList.remove('recording');
+                }
+            } else if (recognition) {
+                try {
+                    recognition.stop();
+                    console.log('Stopped recording');
+                } catch (error) {
+                    console.error('Error stopping recognition:', error);
+                }
+            } else {
+                showError('Speech recognition is not supported in your browser');
+            }
+        });
+
+        fixGrammarBtn.addEventListener('click', fixGrammar);
+
+        addTaskBtn.addEventListener('click', () => {
+            const text = taskInput.value.trim();
+            if (text) {
+                addTodo(text);
+                taskInput.value = '';
+            } else {
+                showError('Please enter a task first');
+            }
+        });
+
+        clearCompletedBtn.addEventListener('click', clearCompleted);
+
+        // Auto-resize textarea
+        taskInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = `${this.scrollHeight}px`;
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocalStorage();
+            renderTodos();
+        });
+    </script>
+</body>
+</html>
